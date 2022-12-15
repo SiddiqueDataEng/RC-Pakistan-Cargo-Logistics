@@ -1,0 +1,40 @@
+# RC Pakistan Cargo & Logistics - Configuration v2.0 (2023)
+# Enhanced configuration with database and ML support
+
+project:
+  name: "RC Pakistan Cargo & Logistics"
+  version: "2.0.0"
+  description: "Advanced logistics analytics and ML platform"
+
+database:
+  type: "postgresql"
+  host: "localhost"
+  port: 5432
+  name: "rc_logistics"
+  user: "rc_user"
+  password: "${DB_PASSWORD}"
+  
+data:
+  source_path: "data/"
+  processed_path: "processed/"
+  backup_path: "backup/"
+  
+ml:
+  models_path: "models/"
+  experiments_path: "experiments/"
+  
+api:
+  host: "0.0.0.0"
+  port: 8000
+  debug: false
+  cors_origins: ["http://localhost:3000"]
+  
+streaming:
+  kafka:
+    bootstrap_servers: ["localhost:9092"]
+    topics: ["logistics_events", "shipment_updates"]
+    
+logging:
+  level: "INFO"
+  format: "json"
+  file: "logs/app.log"

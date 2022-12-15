@@ -1,0 +1,25 @@
+# RC Pakistan Cargo & Logistics - Data Engineering & Analytics Project
+project:
+  name: "RC Pakistan Cargo & Logistics Analytics"
+  description: "End-to-end data engineering, analytics, and ML pipeline for UAE-Pakistan logistics operations"
+  version: "1.0.0"
+
+data:
+  source_path: "data/"
+  processed_path: "processed_data/"
+  
+database:
+  connection_string: "your_connection_string_here"
+  schema: "logistics"
+  
+spark:
+  app_name: "RC_Logistics_Analytics"
+  master: "local[*]"
+  
+ml:
+  models_path: "models/"
+  features_path: "features/"
+  
+analytics:
+  dashboards_path: "dashboards/"
+  reports_path: "reports/"

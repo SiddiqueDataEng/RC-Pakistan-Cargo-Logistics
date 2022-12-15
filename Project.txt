@@ -1,0 +1,631 @@
+RC Pakistan Cargo & Logistics (formally operating as RC Pakistan Cargo & Logistics LLC) is a Dubai-based shipping company specializing in services from the UAE to Pakistan. 
+The specific registration details are:
+Establishment: While the company's social media presence became highly active around April 2022, it operates as a licensed Limited Liability Company (LLC) in the UAE.
+Operating Status: They are actively registered and provide door-to-door cargo services (air and sea) from Dubai, Sharjah, and Ajman to all major cities in Pakistan and Azad Kashmir.
+Location: They maintain a physical office in Dubai, UAE. 
+For official verification or to track a shipment, you can contact them through their Official Facebook Page or reach their Dubai customer service directly at +971 55 600 5070:
+
+
+
+We will design this as a fully relational + realistic logistics database and a dynamic data generator that can generate data for:
+
+Fixed range → 01-01-2022 to 31-12-2022
+
+OR any custom date range → from_date , to_date
+
+Business flow for RC Pakistan Cargo & Logistics (UAE → Pakistan & Azad Kashmir):
+
+Customer → Booking → Shipment → Containers/Packages → Transport (Air/Sea) → Customs → Delivery → Payment → Tracking
+
+1. Core Relational Tables
+Customers
+Cities
+Offices
+Bookings
+Shipments
+ShipmentPackages
+TransportModes
+Containers
+Payments
+DeliveryStatus
+TrackingEvents
+Employees
+
+Customers
+CREATE TABLE Customers (
+    CustomerID INT PRIMARY KEY,
+    FullName VARCHAR(100),
+    Phone VARCHAR(20),
+    Email VARCHAR(100),
+    CityID INT,
+    Country VARCHAR(50),
+    CreatedDate DATE
+);
+
+Cities (UAE + Pakistan + Azad Kashmir)
+CREATE TABLE Cities (
+    CityID INT PRIMARY KEY,
+    CityName VARCHAR(50),
+    Country VARCHAR(50)
+);
+
+
+Example Data:
+
+Dubai, Sharjah, Ajman, Karachi, Lahore, Islamabad, Rawalpindi, Peshawar,
+Quetta, Multan, Sialkot, Mirpur, Muzaffarabad, Kotli
+
+Offices
+CREATE TABLE Offices (
+    OfficeID INT PRIMARY KEY,
+    CityID INT,
+    Address VARCHAR(200),
+    Phone VARCHAR(20)
+);
+
+Transport Modes
+CREATE TABLE TransportModes (
+    ModeID INT PRIMARY KEY,
+    ModeName VARCHAR(20) -- Air / Sea
+);
+
+Bookings
+CREATE TABLE Bookings (
+    BookingID INT PRIMARY KEY,
+    CustomerID INT,
+    BookingDate DATE,
+    OriginOfficeID INT,
+    DestinationCityID INT,
+    ModeID INT,
+    TotalWeightKG DECIMAL(8,2),
+    Status VARCHAR(30)
+);
+
+
+Status examples:
+
+Booked, In Transit, Arrived, Customs Cleared, Out for Delivery, Delivered
+
+Shipments
+CREATE TABLE Shipments (
+    ShipmentID INT PRIMARY KEY,
+    BookingID INT,
+    ShipmentDate DATE,
+    ExpectedDeliveryDate DATE,
+    TrackingNumber VARCHAR(50),
+    CurrentStatus VARCHAR(30)
+);
+
+Shipment Packages
+CREATE TABLE ShipmentPackages (
+    PackageID INT PRIMARY KEY,
+    ShipmentID INT,
+    PackageType VARCHAR(50), -- Box, Carton, Electronics, Household, Documents
+    WeightKG DECIMAL(6,2),
+    DeclaredValue DECIMAL(10,2)
+);
+
+Containers (Mostly for Sea Cargo)
+CREATE TABLE Containers (
+    ContainerID INT PRIMARY KEY,
+    ShipmentID INT,
+    ContainerNumber VARCHAR(30),
+    ContainerSize VARCHAR(10) -- 20ft, 40ft
+);
+
+Payments
+CREATE TABLE Payments (
+    PaymentID INT PRIMARY KEY,
+    BookingID INT,
+    PaymentDate DATE,
+    Amount DECIMAL(10,2),
+    PaymentMethod VARCHAR(30), -- Cash, Bank Transfer, Card
+    PaymentStatus VARCHAR(20)
+);
+
+Delivery Status
+CREATE TABLE DeliveryStatus (
+    StatusID INT PRIMARY KEY,
+    ShipmentID INT,
+    Status VARCHAR(50),
+    StatusDate DATE,
+    CityID INT
+);
+
+Tracking Events
+CREATE TABLE TrackingEvents (
+    EventID INT PRIMARY KEY,
+    ShipmentID INT,
+    EventDescription VARCHAR(200),
+    EventDate DATE,
+    CityID INT
+);
+
+2. Dynamic Data Generator (Python)
+
+This generator supports any date range, including:
+
+01-01-2022 → 31-12-2022
+
+
+or user input.
+
+import random
+from datetime import datetime, timedelta
+from faker import Faker
+
+fake = Faker()
+
+def generate_dates(start_date, end_date, count):
+    delta = end_date - start_date
+    return [start_date + timedelta(days=random.randint(0, delta.days)) for _ in range(count)]
+
+def data_generator(from_date, to_date, records=500):
+    from_date = datetime.strptime(from_date, "%Y-%m-%d")
+    to_date = datetime.strptime(to_date, "%Y-%m-%d")
+
+    cities = [
+        ("Dubai","UAE"), ("Sharjah","UAE"), ("Ajman","UAE"),
+        ("Karachi","Pakistan"), ("Lahore","Pakistan"), ("Islamabad","Pakistan"),
+        ("Rawalpindi","Pakistan"), ("Peshawar","Pakistan"), ("Mirpur","Azad Kashmir"),
+        ("Muzaffarabad","Azad Kashmir")
+    ]
+
+    transport_modes = ["Air", "Sea"]
+    booking_status = ["Booked", "In Transit", "Arrived", "Customs Cleared", "Delivered"]
+
+    customers = []
+    bookings = []
+    shipments = []
+    payments = []
+
+    dates = generate_dates(from_date, to_date, records)
+
+    for i in range(1, records+1):
+        cust = {
+            "CustomerID": i,
+            "Name": fake.name(),
+            "Phone": fake.phone_number(),
+            "City": random.choice(cities)[0],
+            "CreatedDate": random.choice(dates).date()
+        }
+        customers.append(cust)
+
+        booking_date = random.choice(dates)
+        booking = {
+            "BookingID": i,
+            "CustomerID": i,
+            "BookingDate": booking_date.date(),
+            "Origin": random.choice(["Dubai","Sharjah","Ajman"]),
+            "Destination": random.choice(["Karachi","Lahore","Islamabad","Mirpur"]),
+            "Mode": random.choice(transport_modes),
+            "WeightKG": round(random.uniform(5, 500),2),
+            "Status": random.choice(booking_status)
+        }
+        bookings.append(booking)
+
+        shipment_date = booking_date + timedelta(days=random.randint(1,3))
+        delivery_date = shipment_date + timedelta(days=random.randint(3,15))
+
+        shipment = {
+            "ShipmentID": i,
+            "BookingID": i,
+            "ShipmentDate": shipment_date.date(),
+            "ExpectedDelivery": delivery_date.date(),
+            "Tracking": f"RCPL{2022}{i:06}",
+            "Status": booking["Status"]
+        }
+        shipments.append(shipment)
+
+        payment = {
+            "PaymentID": i,
+            "BookingID": i,
+            "Amount": round(booking["WeightKG"] * random.uniform(4,8),2),
+            "Method": random.choice(["Cash","Bank Transfer","Card"]),
+            "Date": booking_date.date(),
+            "Status": "Paid"
+        }
+        payments.append(payment)
+
+    return customers, bookings, shipments, payments
+
+Usage
+
+For your required range:
+
+customers, bookings, shipments, payments = data_generator(
+    "2022-01-01",
+    "2022-12-31",
+    records=1000
+)
+
+
+For dynamic:
+
+customers, bookings, shipments, payments = data_generator(
+    "2024-01-01",
+    "2024-06-30",
+    records=500
+)
+
+3. Why This is Realistic for RC Pakistan Cargo & Logistics
+
+✔ UAE Origin Cities: Dubai, Sharjah, Ajman
+✔ Pakistan & Azad Kashmir Destinations
+✔ Air & Sea transport
+✔ Door-to-door booking model
+✔ Tracking numbers
+✔ Payment handling
+✔ Delivery pipeline statuses
+✔ Container-based sea shipments
+✔ Multi-package shipments
+
+This structure is perfect for:
+
+Data Warehousing
+
+Power BI / Looker dashboards
+
+Azure Data Factory pipelines
+
+Fraud detection models
+
+Shipment delay prediction
+
+Revenue analytics
+
+Operational performance analytics
+
+Next step I can give you:
+
+Complete SQL INSERT generator
+
+CSV file generator for Power BI
+
+Azure Synapse / SQL Server optimized version
+
+Star schema (FactShipment, FactRevenue, DimCustomer, DimCity, DimDate)
+
+Fake Tracking API simulator for live dashboards
+
+yes
+
+I’ll proceed in this order (best practice for analytics + BI + ADF use):
+
+🎯 SQL INSERT Data Generator (Fully Relational)
+
+📄 CSV Generator (for Power BI / Excel / ADF)
+
+⭐ Star Schema (Fact & Dimension tables)
+
+📊 Ready for Azure SQL / SQL Server / Synapse
+
+Let’s start with 1) SQL Insert Generator (Dynamic Date Range)
+
+This will generate data for:
+
+Default: 01-01-2022 → 31-12-2022
+
+Or ANY date range you give later
+
+First create a helper Date table (for realism):
+
+CREATE TABLE DimDate (
+    DateID INT IDENTITY(1,1) PRIMARY KEY,
+    FullDate DATE,
+    Year INT,
+    Month INT,
+    Day INT
+);
+
+
+Populate dynamically:
+
+DECLARE @StartDate DATE = '2022-01-01';
+DECLARE @EndDate DATE   = '2022-12-31';
+
+WHILE @StartDate <= @EndDate
+BEGIN
+    INSERT INTO DimDate (FullDate, Year, Month, Day)
+    VALUES (@StartDate, YEAR(@StartDate), MONTH(@StartDate), DAY(@StartDate));
+
+    SET @StartDate = DATEADD(DAY,1,@StartDate);
+END
+
+
+Cities (UAE → Pakistan → Azad Kashmir):
+
+INSERT INTO Cities VALUES
+(1,'Dubai','UAE'),
+(2,'Sharjah','UAE'),
+(3,'Ajman','UAE'),
+(4,'Karachi','Pakistan'),
+(5,'Lahore','Pakistan'),
+(6,'Islamabad','Pakistan'),
+(7,'Rawalpindi','Pakistan'),
+(8,'Peshawar','Pakistan'),
+(9,'Quetta','Pakistan'),
+(10,'Multan','Pakistan'),
+(11,'Mirpur','Azad Kashmir'),
+(12,'Muzaffarabad','Azad Kashmir');
+
+
+Transport Modes:
+
+INSERT INTO TransportModes VALUES
+(1,'Air'),
+(2,'Sea');
+
+
+Customers Generator (1000 realistic customers):
+
+DECLARE @i INT = 1;
+
+WHILE @i <= 1000
+BEGIN
+    INSERT INTO Customers
+    VALUES (
+        @i,
+        CONCAT('Customer ',@i),
+        CONCAT('+9715',ABS(CHECKSUM(NEWID()))%100000000),
+        CONCAT('cust',@i,'@gmail.com'),
+        (SELECT TOP 1 CityID FROM Cities ORDER BY NEWID()),
+        'UAE',
+        DATEADD(DAY,-ABS(CHECKSUM(NEWID()))%365,'2022-12-31')
+    );
+    SET @i += 1;
+END
+
+
+Bookings (RC business core):
+
+DECLARE @b INT = 1;
+
+WHILE @b <= 2000
+BEGIN
+    INSERT INTO Bookings
+    VALUES (
+        @b,
+        ABS(CHECKSUM(NEWID()))%1000 + 1,
+        DATEADD(DAY,ABS(CHECKSUM(NEWID()))%365,'2022-01-01'),
+        (SELECT TOP 1 OfficeID FROM Offices ORDER BY NEWID()),
+        (SELECT CityID FROM Cities WHERE Country IN ('Pakistan','Azad Kashmir') ORDER BY NEWID() OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY),
+        (SELECT TOP 1 ModeID FROM TransportModes ORDER BY NEWID()),
+        ROUND(RAND()*500+5,2),
+        'Booked'
+    );
+    SET @b += 1;
+END
+
+
+Shipments:
+
+INSERT INTO Shipments
+SELECT 
+    BookingID,
+    BookingID,
+    DATEADD(DAY,1,BookingDate),
+    DATEADD(DAY,7,BookingDate),
+    CONCAT('RCPL',FORMAT(BookingID,'000000')),
+    'In Transit'
+FROM Bookings;
+
+
+Payments:
+
+INSERT INTO Payments
+SELECT 
+    BookingID,
+    BookingID,
+    BookingDate,
+    TotalWeightKG * (4 + RAND()*4),
+    CASE WHEN RAND()<0.4 THEN 'Cash'
+         WHEN RAND()<0.7 THEN 'Bank Transfer'
+         ELSE 'Card' END,
+    'Paid'
+FROM Bookings;
+
+
+Tracking Events:
+
+INSERT INTO TrackingEvents
+SELECT 
+    ShipmentID,
+    ShipmentID,
+    'Shipment departed from UAE',
+    ShipmentDate,
+    (SELECT CityID FROM Cities WHERE Country='UAE' ORDER BY NEWID() OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY)
+FROM Shipments;
+
+
+This gives you a complete, realistic RC Pakistan Cargo & Logistics transactional dataset:
+
+Customers
+
+UAE bookings
+
+Pakistan/Kashmir destinations
+
+Air & Sea transport
+
+Tracking
+
+Payments
+
+Shipment lifecycle
+
+Perfect for:
+✔ Power BI
+✔ Azure Data Factory
+✔ Azure SQL
+✔ Fraud & Delay Prediction
+✔ Operations Dashboards
+
+Now tell me which you want next (I’ll deliver immediately):
+
+A) CSV Generator (One-click files for Power BI)
+B) Star Schema (FactShipment, FactRevenue, DimCustomer, DimCity, DimDate)
+C) Python Data Generator (Full automation + export to CSV & SQL)
+D) Tracking API Simulator (for live dashboards)
+
+For your analytics background and Azure work, I strongly recommend starting with B → Star Schema.
+
+yes
+
+Now we convert your RC Pakistan Cargo & Logistics transactional system into a Data Warehouse Star Schema exactly like real logistics companies use for BI, Power BI, Synapse, ADF, and AI models.
+
+This will make your project look enterprise-grade.
+
+⭐ STAR SCHEMA OVERVIEW
+🎯 Fact Tables
+Fact Table	Purpose
+FactShipment	Shipment movement, delays, transport mode, performance
+FactRevenue	Revenue, payments, weight-based charges
+FactDeliveryStatus	Tracking lifecycle and delivery KPIs
+📐 Dimension Tables
+Dimension	Description
+DimCustomer	Customer analytics
+DimCity	UAE / Pakistan / Azad Kashmir locations
+DimOffice	Origin offices
+DimTransportMode	Air / Sea
+DimDate	Time intelligence
+DimShipmentStatus	Shipment pipeline
+1️⃣ DimDate (Time Dimension)
+CREATE TABLE DimDate (
+    DateKey INT PRIMARY KEY,
+    FullDate DATE,
+    Year INT,
+    Quarter INT,
+    Month INT,
+    MonthName VARCHAR(20),
+    Day INT,
+    WeekDayName VARCHAR(20)
+);
+
+2️⃣ DimCustomer
+CREATE TABLE DimCustomer (
+    CustomerKey INT IDENTITY(1,1) PRIMARY KEY,
+    CustomerID INT,
+    FullName VARCHAR(100),
+    Phone VARCHAR(20),
+    Email VARCHAR(100),
+    CityID INT,
+    Country VARCHAR(50)
+);
+
+3️⃣ DimCity
+CREATE TABLE DimCity (
+    CityKey INT IDENTITY(1,1) PRIMARY KEY,
+    CityID INT,
+    CityName VARCHAR(50),
+    Country VARCHAR(50)
+);
+
+4️⃣ DimOffice
+CREATE TABLE DimOffice (
+    OfficeKey INT IDENTITY(1,1) PRIMARY KEY,
+    OfficeID INT,
+    CityID INT,
+    Address VARCHAR(200)
+);
+
+5️⃣ DimTransportMode
+CREATE TABLE DimTransportMode (
+    ModeKey INT IDENTITY(1,1) PRIMARY KEY,
+    ModeID INT,
+    ModeName VARCHAR(20)
+);
+
+6️⃣ DimShipmentStatus
+CREATE TABLE DimShipmentStatus (
+    StatusKey INT IDENTITY(1,1) PRIMARY KEY,
+    StatusName VARCHAR(50)
+);
+
+
+Insert:
+
+INSERT INTO DimShipmentStatus (StatusName)
+VALUES
+('Booked'),
+('In Transit'),
+('Arrived'),
+('Customs Cleared'),
+('Out for Delivery'),
+('Delivered');
+
+7️⃣ 🚚 FactShipment
+
+Grain: One row per Shipment
+
+CREATE TABLE FactShipment (
+    ShipmentKey INT IDENTITY(1,1) PRIMARY KEY,
+    ShipmentID INT,
+    BookingID INT,
+    CustomerKey INT,
+    OriginCityKey INT,
+    DestinationCityKey INT,
+    ModeKey INT,
+    BookingDateKey INT,
+    ShipmentDateKey INT,
+    ExpectedDeliveryDateKey INT,
+    ActualDeliveryDateKey INT,
+    StatusKey INT,
+    WeightKG DECIMAL(8,2),
+    TransitDays INT
+);
+
+8️⃣ 💰 FactRevenue
+
+Grain: One row per Payment
+
+CREATE TABLE FactRevenue (
+    RevenueKey INT IDENTITY(1,1) PRIMARY KEY,
+    BookingID INT,
+    CustomerKey INT,
+    DateKey INT,
+    Amount DECIMAL(10,2),
+    PaymentMethod VARCHAR(30),
+    WeightKG DECIMAL(8,2)
+);
+
+9️⃣ 📦 FactDeliveryStatus (Tracking Events)
+CREATE TABLE FactDeliveryStatus (
+    StatusFactKey INT IDENTITY(1,1) PRIMARY KEY,
+    ShipmentID INT,
+    ShipmentKey INT,
+    StatusKey INT,
+    CityKey INT,
+    DateKey INT
+);
+
+🔄 ETL MAPPING (Transactional → Star)
+Source Table	Target
+Customers	DimCustomer
+Cities	DimCity
+Offices	DimOffice
+TransportModes	DimTransportMode
+Shipments + Bookings	FactShipment
+Payments	FactRevenue
+DeliveryStatus + TrackingEvents	FactDeliveryStatus
+📊 BUSINESS KPIs YOU CAN BUILD
+
+With this model, you can instantly build:
+
+Revenue by Month / City / Transport Mode
+
+Air vs Sea shipment performance
+
+Average delivery time UAE → Pakistan
+
+Delay analysis (Expected vs Actual)
+
+Customer lifetime value
+
+City-wise shipment volume
+
+Payment method distribution
+
+Kashmir vs Pakistan delivery performance
+
+This is exactly how DHL, Aramex, FedEx analytics works.

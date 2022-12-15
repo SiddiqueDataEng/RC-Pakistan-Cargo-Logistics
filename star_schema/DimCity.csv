@@ -1,0 +1,11 @@
+CityKey,CityName,Country,CityType
+1,Dubai,UAE,Origin
+2,Sharjah,UAE,Origin
+3,Ajman,UAE,Origin
+4,Karachi,Pakistan,Destination
+5,Lahore,Pakistan,Destination
+6,Islamabad,Pakistan,Destination
+7,Rawalpindi,Pakistan,Destination
+8,Peshawar,Pakistan,Destination
+9,Mirpur,Azad Kashmir,Destination
+10,Muzaffarabad,Azad Kashmir,Destination

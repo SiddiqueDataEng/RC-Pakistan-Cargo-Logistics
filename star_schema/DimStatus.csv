@@ -1,0 +1,6 @@
+StatusKey,StatusName,Description
+1,Booked,Initial booking created
+2,In Transit,Shipment in progress
+3,Arrived,Arrived at destination country
+4,Customs Cleared,Cleared customs procedures
+5,Delivered,Successfully delivered to customer

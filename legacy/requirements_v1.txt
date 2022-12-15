@@ -1,0 +1,17 @@
+# RC Pakistan Cargo & Logistics - Requirements v1.0 (2022)
+# Python 3.8 compatible versions
+
+pandas==1.4.2
+numpy==1.21.5
+matplotlib==3.5.1
+seaborn==0.11.2
+scikit-learn==1.1.1
+flask==2.2.2
+jupyter==1.0.0
+
+# Basic data processing
+openpyxl==3.0.9
+
+# No advanced ML libraries yet
+# No faker library - using basic string generation
+# SQLite only - no PostgreSQL support yet
