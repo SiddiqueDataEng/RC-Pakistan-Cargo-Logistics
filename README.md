@@ -149,12 +149,6 @@ This project demonstrates:
 - Machine learning for logistics optimization
 - Real-world data science project structure
 
-## 📞 Support
-
-For questions about RC Pakistan Cargo & Logistics operations:
-- Dubai Office: +971 55 600 5070
-- Services: UAE → Pakistan & Azad Kashmir
-- Modes: Air & Sea cargo
 
 ---
 
